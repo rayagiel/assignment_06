@@ -19,6 +19,8 @@ one call and hand back what the API said. Everything else is Step 2's job.
 This step is walked through line by line. The next two steps give you less.
 """
 
+from urllib import response
+
 import requests
 
 from .settings import (
@@ -48,9 +50,11 @@ def get_sentiment(text: str) -> dict:
       `data=` sends a form, which is what this endpoint expects (lesson 4-2).
     - `response.raise_for_status()`, then `return response.json()`.
     """
-    # TODO: your code here
-    pass
-
+    url = f"{BASE_URL}/api/azure/sentiment"
+    headers = {"X-API-KEY": get_api_key()}
+    response = requests.post(url, headers=headers, data={"text": text})
+    response.raise_for_status()
+    return response.json()
 
 def get_entities(text: str) -> dict:
     """Azure named-entity recognition for one piece of text.
@@ -65,8 +69,12 @@ def get_entities(text: str) -> dict:
     - Exactly `get_sentiment` with a different path. Write it again rather than
       copy-paste-and-forget: the path is the only line that changes.
     """
-    # TODO: your code here
-    pass
+    url = f"{BASE_URL}/api/azure/entityrecognition"
+    headers = {"X-API-KEY": get_api_key()}
+    response = requests.post(url, headers=headers, data={"text": text})
+    response.raise_for_status()
+    return response.json()
+
 
 
 def classify_mentions(review_text: str, mentions: list) -> dict:
@@ -95,8 +103,16 @@ def classify_mentions(review_text: str, mentions: list) -> dict:
       mention) and instant after that, because the portal caches every answer.
     - `raise_for_status()`, `return response.json()`.
     """
-    # TODO: your code here
-    pass
+
+    url = f"{BASE_URL}/api/ollama/systemone"
+    headers = {"X-API-KEY": get_api_key()}
+    body = {
+      "state": {"review": review_text},
+      "questions": subject_questions(mentions),
+    }
+    response = requests.post(url, headers=headers, json=body)
+    response.raise_for_status()
+    return response.json()
 
 
 def ask_llm(messages: list) -> str:
@@ -121,5 +137,9 @@ def ask_llm(messages: list) -> str:
     - `requests.post(url, headers=headers, json=messages, params=params)`
     - `raise_for_status()`, then dig the content out of the JSON and return it.
     """
-    # TODO: your code here
-    pass
+    url = f"{BASE_URL}/api/azure/foundry/chat/completions"
+    headers = {"X-API-KEY": get_api_key()}
+    params = {"model": LLM_MODEL, "reasoning_effort": LLM_REASONING_EFFORT}
+    response = requests.post(url, headers=headers, json=messages, params=params)
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]

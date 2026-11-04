@@ -103,8 +103,7 @@ def item_name(mention: str, aliases: dict) -> str:
         item_name("Parking downtown", aliases)  ->  "parking"
         item_name("Mocha Latte", aliases)        ->  "mocha latte"   # not an alias
     """
-    # TODO: your code here
-    pass
+    return aliases.get(mention.lower(),mention.lower()).strip()
 
 
 def build_mentions(reviews: pd.DataFrame, sentences: pd.DataFrame,
@@ -124,8 +123,18 @@ def build_mentions(reviews: pd.DataFrame, sentences: pd.DataFrame,
     cortado" both becoming "oat milk cortado"). Sorted by `review_id` then
     `mention_offset`, plain index.
     """
-    # TODO: your code here
-    pass
+    df1 = pd.concat([opinions, entity_rows], ignore_index=True)
+    df2 = pd.merge(df1, subjects, on =['review_id', 'mention'], how='inner')
+    df3 = pd.merge(df2, sentences, on =['review_id','sentence_id'], how='inner')
+    df4 = pd.merge(df3, reviews, on='review_id', how='inner')
+    df4['item'] = df4['mention'].apply(lambda x: item_name(x, aliases))
+    df4 = df4[df4['subject'] != 'other']
+    df4 = df4.sort_values(['review_id', 'mention_offset'])
+    df4 = df4.drop_duplicates(['review_id', 'sentence_id', 'item'])
+    df5 = df4[['review_id', 'date', 'location', 'stars', 'item',
+    'mention', 'subject', 'mention_sentiment', 'assessments', 'sentence_text',
+    'source', 'subject_confidence']]
+    return df5
 
 
 def analyze_reviews(reviews_file: str) -> pd.DataFrame:
@@ -137,8 +146,22 @@ def analyze_reviews(reviews_file: str) -> pd.DataFrame:
     (cached with `cache_path(reviews_file, "subjects", "csv")`), and finally
     `build_mentions` with `load_aliases()`. Call the functions; do not redo them.
     """
-    # TODO: your code here
-    pass
+    reviews = pd.read_csv(reviews_file)
+    cache_file = cache_path(reviews_file, "sentiment")
+    sentiment = sentiment_step(reviews, cache_file)
+    entities = entities_step(reviews, cache_path(reviews_file, "entities"))
+    sentence_table = sentences_table(sentiment)
+    ent_table = entities_table(entities)
+    opinion_table = opinions_table(sentiment)
+    mentions = entity_mentions(ent_table, sentence_table, opinion_table)
+    combined_mentions = pd.concat([opinion_table, mentions])
+    cache_file2 = cache_path(reviews_file, "subjects", "csv")
+    subject = subjects_step(reviews, combined_mentions, cache_file2)
+    aliases = load_aliases()
+    output = build_mentions(
+        reviews, sentence_table, opinion_table, combined_mentions, subject, aliases
+    )
+    return output
 
 
 def summarize_items(mentions: pd.DataFrame) -> pd.DataFrame:
@@ -163,8 +186,21 @@ def summarize_items(mentions: pd.DataFrame) -> pd.DataFrame:
     - **Engineer** `net` = `positive` - `negative`: one number that says whether
       an item is loved or a problem.
     """
-    # TODO: your code here
-    pass
+    table = pd.pivot_table(
+        data=mentions,
+        index=["subject", "item"],
+        columns="mention_sentiment",
+        aggfunc="size",
+        fill_value=0,
+    )
+    table["positive"] = table.get("positive", 0)
+    table["negative"] = table.get("negative", 0)
+    table["mentions"] = table["positive"] + table["negative"]
+    table = table.reset_index()
+    table["mentions"] = table["positive"] + table["negative"]
+    table["net"] = table["positive"] - table["negative"]
+    output = table[["subject", "item", "mentions", "positive", "negative", "net"]]
+    return output.sort_values("mentions", ascending=False)
 
 
 # --- The Q&A box --------------------------------------------------------------------
@@ -276,8 +312,38 @@ def build_messages(question: str, evidence: pd.DataFrame, limit: int = 20) -> li
     language model only writes the answer. Language models are bad at counting
     and good at prose — give each the job it is good at.
     """
-    # TODO: your code here
-    pass
+    items_summary = summarize_items(evidence)
+    items_lines = []
+    for row in items_summary.itertuples():
+        items_lines.append(
+            f"- {row.item} ({row.subject}): {row.mentions} mentions, "
+            f"{row.positive} positive, {row.negative} negative, net {row.net:+d}"
+        )
+    items_text = "\n".join(items_lines)
+    positive = items_summary['positive'].sum()
+    negative = items_summary['negative'].sum()
+    neutral = len(evidence) - positive - negative
+    sentences_lines = []
+    for row in evidence.itertuples():
+        sentences_lines.append(
+            f"- ({row.location}, {row.date}, {row.item}, "
+            f"{row.mention_sentiment}) {row.sentence_text}"
+        )
+        if len(sentences_lines) >= limit:
+            break
+    sentences_text = "\n".join(sentences_lines)
+    user_content = (
+        f"Question: {question}\n"
+        f"Facts: {len(evidence)} mentions — {positive} positive, "
+        f"{negative} negative, "
+        f"{neutral} neutral or mixed.\n"
+        f"Items, most mentioned first:\n{items_text}\n"
+        f"Review sentences:\n{sentences_text}"
+    )
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_content}
+    ]
 
 
 def answer_question(question: str, mentions: pd.DataFrame, aliases: dict):
