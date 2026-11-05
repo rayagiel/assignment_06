@@ -1,24 +1,24 @@
-I learned how to called APIs and about the HTTP status code. In the module apicalls.py, 
+I learned how to call APIs and about the HTTP status code. In the module apicalls.py, 
 I was able to write several functions, including classify_mentions() and get_sentiment(). 
-I used my API key from the  IoT Cent portal but my API key was hiddened in the .env
-file so uesrs cannot steal my API key. I used the specific headers to call each API key 
-in my fuction that returned the API's response. I also learned about HTTP status codes and 
-that response.raise_for_status will only raise an error if there is an issue. 400 means 
-there is an error on my end while 200 means it was succesful. I also learend about caching, 
+I used my API key from the  IoT Cent portal and I kept it hidden in the .env
+file so users cannot steal it. I used the specific headers to call each API 
+in my function that returned the API's response. I also learned about HTTP status codes and 
+that response.raise_for_status() will only raise an error if there is an issue. 400 means 
+there is an error on my end, while 200 means it was succesful. I also learned about caching, 
 meaning that once I called the API, the response would be saved and that response would be 
 reused if the same API was called on the same data. 
 
-In terms of struggles, it was very hard to me to keep track of all of the different
-forms of data. At some points there were 3 or 4 very similar tables, dataframes, or files
+In terms of struggles, it was very hard for me to keep track of all of the different
+forms of data. At some points there were three or four very similar tables, dataframes, or files
 being used in one function. It was hard to keep track of which column was in which dataframe
 and where the data was coming from. I found this to be especially true in analyze_reviews()
 where I was calling many functions and compiling all of the information. I also found 
-this to be true with build_response() because there a lot of dataframes to keep track of.
+this to be true with build_response() because there were a lot of dataframes to keep track of.
 
-One thing I am going to do differently next time is to make my variables names better. 
-In the past, I tried to improve on debugging, checking my code in the Streamlit often, 
+One thing I am going to do differently next time is to make my variable names better. 
+In the past, I tried to improve my debugging, checking my code in Streamlit often, 
 and carefully reading the directions to make sure I understood the requirements. I did all 
-of those things for this assignment, and it all helped. However, I was struggling with 
-managing all of the data, tables, and function outputs. If I had been better 
+of those things for this assignment, and it all helped. However, I struggled to 
+manage all of the data, tables, and function outputs. If I had been better 
 about naming each variable with a unique and traceable name, I would have had an easier 
 time writing this program. 
