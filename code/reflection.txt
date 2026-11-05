@@ -1,7 +1,23 @@
-Write your reflection here.
+Through this assignment, I learned how to called APIs and about the HTTP status code. Through
+the functions in the apicalls.py module, I was able to write several functions, including
+classify_mentions() and get_sentiment(). I used the url, my API key hiddened in the .env
+file and the necessary headers to call each API key using a fuction that returned the response.
+I also learned about HTTP status codes and that response.raise_for_status will only raise an 
+error if there is an issue. I also learend about caching, meaning that once I called the API, 
+the response would be saved and it would reuse the same result instead of buring through my
+daily requests. 
 
-See reflection.md for what makes a good reflection — be specific, use the
-terminology from this assignment (REST API, endpoint, HTTP status code,
-raise_for_status, API key, form data vs. JSON body, rate limit, caching,
-json_normalize, record_path, meta, grain, opinion mining, named-entity
-recognition, prompt, system prompt, reasoning model), and make it actionable.
+For things I struggled with, I was very hard to me to keep track of all of the different
+forms of data. At some points there were 3 or 4 very similar tables or dataframes or files
+being used in one function. It was hard to keep track of which column was in which dataframe
+and where the data was coming from. I found this to be especially true in analyze reviews
+where I was calling many functions and compiling all of the information. I also found 
+this to be true with build response, there a lot of very similar columns to keep track of.
+
+One thing I am going to do differently next time is to name my variables better. In the past, 
+I tried to improve on debugging, checking things in the streamlit frequently, and clearly 
+reading the directions to make sure I understood the requirements. I did all of those things
+for this assignment, and it all helped. However, I was struggling with managing all of 
+the data and all of the tables and function outputs. I think if I had been better about
+naming each variable something unique and traceable, I would have had an easier time writing
+this program. 

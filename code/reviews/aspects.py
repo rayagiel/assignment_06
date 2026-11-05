@@ -127,7 +127,7 @@ def build_mentions(reviews: pd.DataFrame, sentences: pd.DataFrame,
     df2 = pd.merge(df1, subjects, on=['review_id', 'mention'], how='inner')
     df3 = pd.merge(df2, sentences, on=['review_id', 'sentence_id'], how='inner')
     df4 = pd.merge(df3, reviews, on='review_id', how='inner')
-    df4['item'] = df4['mention'].apply(lambda x: item_name(x, aliases))
+    df4['item'] = df4['mention'].apply(lambda row: item_name(row, aliases))
     df4 = df4[df4['subject'] != 'other']
     df4 = df4.sort_values(['review_id', 'mention_offset'])
     df4 = df4.drop_duplicates(['review_id', 'sentence_id', 'item'])
