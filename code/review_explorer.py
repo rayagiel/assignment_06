@@ -48,70 +48,158 @@ from reviews import (
 #                    otherwise REVIEWS_FILE from the package.
 #    (os.environ.get(name, default) does exactly this. The tests set the variable
 #    to the 5 test reviews; when you run the page you see all 30.)
-#
+reviews_file = os.environ.get("REVIEWS_FILE", REVIEWS_FILE)
+
 # 2. HEADING
 #    st.title: Salt City Coffee — What Customers Are Saying
 #    st.markdown: one sentence telling the owner what the page does, e.g. "Every
 #    customer review, broken into the things people talk about. Filter by location
 #    or subject, or ask a question at the bottom of the page."
-#
+st.title("Salt City Coffee — What Customers Are Saying")
+st.markdown(
+    "Every customer review, broken into the things people talk about. Filter by "
+    "location or subject, or ask a question at the bottom of the page."
+)
+
 # 3. THE DATA
 #    mentions <- analyze_reviews(reviews_file)
 #    (One row per thing a customer had an opinion about. The first run fills
 #    cache/; after that this takes a second.)
-#
+mentions = analyze_reviews(reviews_file)
 # 4. TWO FILTERS, SIDE BY SIDE
 #    a. Make two columns with st.columns(2).
+col1, col2 = st.columns(2)
 #    b. In the first column, an st.selectbox labeled "Location" with key "location".
 #       Its options: "All" followed by the sorted unique values of
 #       mentions["location"].
+with col1:
+    location = col1.selectbox(
+        "Location",
+        options=["All"] + sorted(mentions["location"].unique()),
+        key="location",
+    )
 #    c. In the second column, an st.selectbox labeled "Subject" with key "subject".
 #       Its options: "All" followed by the sorted unique values of
 #       mentions["subject"].
+with col2:
+    subject = col2.selectbox(
+        "Subject",
+        options=["All"] + sorted(mentions["subject"].unique()),
+        key="subject",
+    )
 #    d. selected <- mentions
 #       If the location is not "All", keep only the rows of selected whose
 #       location equals it. Then, if the subject is not "All", keep only the rows
 #       whose subject equals it. (Two separate ifs, so both filters can apply.)
+if location != "All":
+    selected = mentions[mentions["location"] == location]
+else:
+    selected = mentions
+if subject != "All":
+    selected_2 = selected[selected["subject"] == subject]
+else:
+    selected_2 = selected
 #
 # 5. FOUR METRICS, SIDE BY SIDE — all computed from selected, not mentions
 #    a. Make four columns with st.columns(4).
+col1, col2, col3, col4 = st.columns(4)
 #    b. st.metric "Reviews":  the number of unique review_id values
+with col1:
+    col1.metric("Reviews", value=selected_2["review_id"].nunique())
 #    c. st.metric "Mentions": the number of rows
+with col2:
+    col2.metric("Mentions", value=len(selected_2))
 #    d. st.metric "Positive": how many rows have mention_sentiment == "positive"
+with col3:
+    positive_count = int(
+        (selected_2["mention_sentiment"] == "positive").sum()
+    )
+    col3.metric("Positive", value=positive_count)
 #    e. st.metric "Negative": how many rows have mention_sentiment == "negative"
+with col4:
+    negative_count = int(
+        (selected_2["mention_sentiment"] == "negative").sum()
+    )
+    col4.metric("Negative", value=negative_count)
 #    (A boolean Series .sum() counts the Trues. Wrap it in int() so the metric
 #    shows 9, not np.int64(9).)
 #
 # 6. THREE TABLES IN THREE TABS
 #    a. summary <- summarize_items(selected)
+summary = summarize_items(selected_2)
 #    b. Make three tabs with st.tabs, labeled exactly, in this order:
 #       "Most praised", "Most complained about", "What people said"
+tab1, tab2, tab3 = st.tabs(
+    ["Most praised", "Most complained about", "What people said"]
+)
 #       (st.tabs returns one object per tab; call .dataframe on each one.)
 #    c. Most praised: the rows of summary with net > 0, sorted by net from
 #       highest to lowest, first 5 rows. Show with hide_index=True.
+with tab1:
+    most_praised = (
+        summary[summary["net"] > 0]
+        .sort_values(by="net", ascending=False)
+        .head(5)
+    )
+    st.dataframe(most_praised, hide_index=True)
 #    d. Most complained about: the rows of summary with net < 0, sorted by net
 #       from lowest to highest (most negative first), first 5 rows.
 #       hide_index=True.
+with tab2:
+    most_complained = (
+        summary[summary["net"] < 0]
+        .sort_values(by="net", ascending=True)
+        .head(5)
+    )
+    st.dataframe(most_complained, hide_index=True)
 #    e. What people said: selected, with only these columns, in this order:
 #       date, location, item, subject, mention_sentiment, assessments,
 #       sentence_text. hide_index=True.
-#
+with tab3:
+    what_people_said = selected_2[
+        [
+            "date",
+            "location",
+            "item",
+            "subject",
+            "mention_sentiment",
+            "assessments",
+            "sentence_text",
+        ]
+    ]
+    st.dataframe(what_people_said, hide_index=True)
 # 7. THE QUESTION BOX
 #    a. st.subheader: Ask the reviews
+st.subheader("Ask the reviews")
 #    b. question <- st.text_input labeled "Your question" with key "question".
 #       Give it a placeholder that shows the owner what to ask, e.g.
 #       "What is the most popular product?"
+question = st.text_input(
+    "Your question",
+    key="question",
+    placeholder="What is the most popular product?",
+)
 #    c. An st.button labeled "Ask" with key "ask".
-#
+
 # 8. WHEN ASK IS CLICKED (and the question is not blank — question.strip())
+if st.button("Ask", key="ask"):
+    if question:
+        question = question.strip()
 #    a. scope, evidence <- answer_question(question, mentions, load_aliases())
 #       (Provided. scope says what the question is about; evidence is the rows
 #       of mentions that answer it. Use mentions here, not selected: the
 #       question, not the filters, decides what to look up.)
+    scope, evidence = answer_question(question, mentions, load_aliases())
 #    b. If evidence is empty:
 #          st.warning saying no reviews mention describe_scope(scope), with a
 #          hint to try a menu item, a staff member, or part of the shop.
 #          Do NOT call the model — there is nothing for it to answer from.
+    if evidence.empty:
+        st.warning(
+            f"No reviews mention {describe_scope(scope)}. Try a menu item, "
+            "a staff member, "
+            "or part of the shop."
+        )
 #    c. Otherwise:
 #          i.   messages <- build_messages(question, evidence)
 #          ii.  answer <- ask_llm(messages), inside `with st.spinner(...):` so the
@@ -122,6 +210,17 @@ from reviews import (
 #          v.   st.dataframe of evidence, with only these columns: date,
 #               location, item, mention_sentiment, sentence_text.
 #               hide_index=True.
-#
+    else:
+        messages = build_messages(question, evidence)
+        with st.spinner("Asking the model...:"):
+            answer = ask_llm(messages)
+        st.markdown(answer)
+        st.caption(f"Based on {len(evidence)} mentions — {describe_scope(scope)}:")
+        st.dataframe(
+            evidence[
+                ["date", "location", "item", "mention_sentiment", "sentence_text"]
+            ],
+            hide_index=True,
+        )
 # What the page does NOT do: call the API directly, group or pivot, or build the
 # prompt itself. That logic lives in the package; the page only assembles it.

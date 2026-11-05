@@ -19,8 +19,6 @@ one call and hand back what the API said. Everything else is Step 2's job.
 This step is walked through line by line. The next two steps give you less.
 """
 
-from urllib import response
-
 import requests
 
 from .settings import (
@@ -56,6 +54,7 @@ def get_sentiment(text: str) -> dict:
     response.raise_for_status()
     return response.json()
 
+
 def get_entities(text: str) -> dict:
     """Azure named-entity recognition for one piece of text.
 
@@ -74,7 +73,6 @@ def get_entities(text: str) -> dict:
     response = requests.post(url, headers=headers, data={"text": text})
     response.raise_for_status()
     return response.json()
-
 
 
 def classify_mentions(review_text: str, mentions: list) -> dict:

@@ -98,10 +98,24 @@ def sentences_table(documents: list) -> pd.DataFrame:
     and `.cumcount()`. Keep only the six columns above. Strip the trailing space
     Azure leaves on `sentence_text` with `.str.strip()`.
     """
-    df = pd.json_normalize(documents, record_path="sentences", meta=["review_id"], record_prefix="sentence_")
+    df = pd.json_normalize(
+        documents,
+        record_path="sentences",
+        meta=["review_id"],
+        record_prefix="sentence_",
+    )
     df["sentence_id"] = df.groupby("review_id").cumcount()
     df["sentence_text"] = df["sentence_text"].str.strip()
-    output = df[["review_id", "sentence_id", "sentence_text", 'sentence_sentiment', 'sentence_offset', 'sentence_length']]
+    output = df[
+        [
+            "review_id",
+            "sentence_id",
+            "sentence_text",
+            "sentence_sentiment",
+            "sentence_offset",
+            "sentence_length",
+        ]
+    ]
     return output
 
 
@@ -137,7 +151,9 @@ def opinions_table(documents: list) -> pd.DataFrame:
                 for relations in target["relations"]:
                     if relations["relationType"] == "assessment":
                         assessment_index = int(relations["ref"].split("/")[-1])
-                        assessments += sentence["assessments"][assessment_index]["text"] + ", "
+                        assessments += (
+                            sentence["assessments"][assessment_index]["text"] + ", "
+                        )
                 assessments = assessments.rstrip(", ")
                 row = {
                     "review_id": document["review_id"],
@@ -167,7 +183,12 @@ def entities_table(documents: list) -> pd.DataFrame:
     entities contributes no rows, which `json_normalize` handles for you.
     """
 
-    df = pd.json_normalize(documents, record_path="entities", meta=["review_id"], record_prefix="entity_")
+    df = pd.json_normalize(
+        documents,
+        record_path="entities",
+        meta=["review_id"],
+        record_prefix="entity_",
+    )
     df = df[df["entity_category"].isin(MENTION_CATEGORIES)]
     output = df[
         ["review_id", "entity_text", "entity_category", "entity_offset"]
@@ -198,7 +219,11 @@ def subjects_step(reviews: pd.DataFrame, mentions: pd.DataFrame,
         return pd.read_csv(cache_file)
     rows = []
     for review in reviews.itertuples():
-        review_mentions = mentions[mentions.review_id == review.review_id].dropna().drop_duplicates()
+        review_mentions = (
+            mentions[mentions.review_id == review.review_id]
+            .dropna()
+            .drop_duplicates()
+        )
         df1 = review_mentions.sort_values("mention_offset")
         that_list = df1["mention"].to_list()
         if not that_list:

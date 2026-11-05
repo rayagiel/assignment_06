@@ -103,7 +103,7 @@ def item_name(mention: str, aliases: dict) -> str:
         item_name("Parking downtown", aliases)  ->  "parking"
         item_name("Mocha Latte", aliases)        ->  "mocha latte"   # not an alias
     """
-    return aliases.get(mention.lower(),mention.lower()).strip()
+    return aliases.get(mention.lower(), mention.lower()).strip()
 
 
 def build_mentions(reviews: pd.DataFrame, sentences: pd.DataFrame,
@@ -124,8 +124,8 @@ def build_mentions(reviews: pd.DataFrame, sentences: pd.DataFrame,
     `mention_offset`, plain index.
     """
     df1 = pd.concat([opinions, entity_rows], ignore_index=True)
-    df2 = pd.merge(df1, subjects, on =['review_id', 'mention'], how='inner')
-    df3 = pd.merge(df2, sentences, on =['review_id','sentence_id'], how='inner')
+    df2 = pd.merge(df1, subjects, on=['review_id', 'mention'], how='inner')
+    df3 = pd.merge(df2, sentences, on=['review_id', 'sentence_id'], how='inner')
     df4 = pd.merge(df3, reviews, on='review_id', how='inner')
     df4['item'] = df4['mention'].apply(lambda x: item_name(x, aliases))
     df4 = df4[df4['subject'] != 'other']
