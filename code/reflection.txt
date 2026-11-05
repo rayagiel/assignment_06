@@ -1,25 +1,24 @@
 I learned how to call APIs and about the HTTP status code. In the module apicalls.py, 
 I was able to write several functions, including classify_mentions() and get_sentiment(). 
-I used my API key from the  IoT Cent portal and I kept it hidden in the .env
+I used my API key from the IoT Cent portal and I kept it hidden in the .env
 file so users cannot steal it.  I also learned about HTTP status codes and 
-that response.raise_for_status() will only raise an error if there is an issue. An code in the 400s means 
-there is a client error, while a code in the 200s means the request was succesful. I also learned about caching. 
-Once I called the API, the response is saved and that response would be 
-reused if the same request was made. For example, in the function subject_steps(), 
-we check to see if the cache_file path exists with "if os.path.exists(cache_file)". If it does, 
-we just return the existing response to that request instead of making a new request.
+that response.raise_for_status() will only raise an exception if there is an issue. A code in the 400s, which means 
+a client error, or a code in the 500s, which means a server error, will raise an exemption. A code in the 200s means the request was successful. I also learned about caching. 
+Once I called the API, the response is saved and that response is reused if the same request was made. For example, in the function subject_steps(), 
+it checks to see if the cache_file path exists with "if os.path.exists(cache_file)". If it does, 
+it just return the existing response to that request instead of making a new request.
 
 In terms of struggles, it was very hard for me to keep track of all of the different
 forms of data. At some points there were three or four very similar dataframes
 being used in one function. It was hard to keep track of which column was in which dataframe
-and where the data was coming from. I found this to be especially true in analyze_reviews()
+and where the data was coming from. I found this to be especially true in analyze_reviews(),
 where I was calling many functions and compiling all of the information. I also found 
-this to be true with build_response() because there were a lot of dataframes to keep track of.
+this to be true with build_response(), because there were a lot of dataframes to keep track of.
 
 One thing I am going to do differently next time is to make my variable names better. 
-In the past, I tried to improve my debugging, checking my code in Streamlit often, 
+In the past, I tried to improve my debugging by checking my code in Streamlit often, 
 and carefully reading the directions to make sure I understood the requirements. I did all 
-of those things for this assignment, and it all helped. However, I struggled to 
+of those things for this assignment, and they all helped. However, I struggled to 
 manage all of the data, tables, and function outputs. If I had been better 
 about naming each variable with a unique and traceable name, I would have had an easier 
 time writing this program. 
